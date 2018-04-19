@@ -11,8 +11,6 @@ namespace WebApplication2
         public static void Register(HttpConfiguration config)
         {
             // Web API 配置和服务
-            config.Formatters.Clear();
-            config.Formatters.Add(new JsonMediaTypeFormatter());
             // Web API 路由
             config.MapHttpAttributeRoutes();
 

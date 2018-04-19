@@ -7,20 +7,57 @@
 	<meta charset="utf-8" />
 </head>
 <body>
+    <button id="login_btn">链接</button>
 <script>
-    $.ajax({
-        url: "/api/Test",
-        method: "post",
-        data: '{"id":2,"name":"ceshi1"}',
-        dataType: "json",
-        contentType: "application/json; charset=utf8",
-        success: function (data) {
-            console.log(data)
-        },
-        error: function (data) {
-            console.log(data.responseText)
-        }
+    //var form = new FormData();
+    //form.append("version_code", "3.3.0");
+    //form.append("device", "dingtalk");
+    //form.append("login", "18817958576");
+    //form.append("password", "mengyu24");
+
+    //var settings = {
+    //    "async": true,
+    //    "crossDomain": true,
+    //    "url": "https://api.ikcrm.com/api/v2/auth/login",
+    //    "method": "POST",
+    //    "headers": {
+    //        "accept": "*/*"
+    //    },
+    //    "processData": false,
+    //    "contentType": false,
+    //    "mimeType": "multipart/form-data",
+    //    "data": form
+    //}
+
+    //$.ajax(settings).done(function (response) {
+    //    var str = JSON.parse(response)
+    //    console.log(str);
+    //});
+    var j = {
+        version_code: "3.3.0",
+        device: "dingtalk",
+        login: "18817958576",
+        password: "mengyu24",
+    }
+    var json = JSON.stringify(j)
     
+    $("#login_btn").on("click", function () {
+        $.ajax({
+            url: "/api/Test",
+            type: "post",
+            dataType: "json",
+            contentType: "application/json; charset=utf8",
+            data: {},
+            headers: {
+                "accept": "*/*"
+            },
+            processData: false,
+            contentType: false,
+            mimeType: "multipart/form-data",
+            success:function(data){
+                console.log(data)
+            }
+        })
     })
 </script>
 </body>

@@ -5,10 +5,5 @@ using System.Web;
 
 namespace WebApplication2.Models
 {
-    public class Test
-    {
-        public int id { get; set; }
-
-        public string name { set; get; }
-    }
+    
 }
