@@ -230,9 +230,9 @@ def createOrder(orderList):
         result=createSingleOrder(orderList[i],try_times)
         if(result!=True):
             #记录创建出错订单
-            CreateRecord("订单["+json.loads(orderList[i])["platform_code"]+"]创建失败！",""+result+"",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
+            CreateRecord("Fail","订单: "+json.loads(orderList[i])["platform_code"]+"创建失败！",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),"1")
         else:
-            CreateRecord("订单["+json.loads(orderList[i])["platform_code"]+"]创建成功！",""+str(result)+"",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
+            CreateRecord("UploadSuccess","订单: "+json.loads(orderList[i])["platform_code"]+"创建成功！",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),"1")
         #更新订单数据
         platform_code=json.loads(orderList[i])
         platform_code=platform_code["platform_code"]
@@ -278,7 +278,7 @@ def getExpressInfo(start_time,end_time):
         if(express_information!=None):
             #更新订单数据
             update_order="update MD_Order set delivery_state=2,express_information='"+str(express_information)+"' where order_code='"+orders[i][1]+"'"
-            suc_list.append("订单:"+orders[i][1])
+            suc_list.append(orders[i][1]+" ")
             cur.execute(update_order)
     cur = conn.cursor()
     conn.commit()
@@ -288,10 +288,10 @@ def getExpressInfo(start_time,end_time):
     max_record=20
     if(len(suc_list)>max_record):
         for i in range(0,len(suc_list)//max_record):
-            CreateRecord(""+str(max_record)+"个订单物流获取成功！",""+ str(suc_list[i*max_record:i*max_record+max_record-1]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
-        CreateRecord(str(len(suc_list)-len(suc_list)//max_record*max_record)+"个订单物流获取成功！",""+ str(suc_list[len(suc_list)//max_record*max_record:len(suc_list)]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
+            CreateRecord("DownloadSuccess",""+ str(suc_list[i*max_record:i*max_record+max_record-1]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),str(max_record))
+        CreateRecord("DownloadSuccess",""+ str(suc_list[len(suc_list)//max_record*max_record:len(suc_list)]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),str(len(suc_list)-len(suc_list)//max_record*max_record))
     else:
-        CreateRecord(str(len(suc_list))+"个订单物流获取成功！",""+ str(suc_list).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
+        CreateRecord("DownloadSuccess",""+ str(suc_list).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),str(len(suc_list)))
     return True
 
 #更新前一天订单物流信息
@@ -313,7 +313,7 @@ def getSingelExpressInfo(order_code,get_times):
                 mail_no=response_json["orders"][0]["deliverys"][0]["mail_no"]
                 express_information=express_name+':'+mail_no
                 receiver_mobile = response_json["orders"][0]["receiver_mobile"]
-                print(send_Msg(express_information,receiver_mobile)) # 发送短消息
+                #print(send_Msg(mail_no,receiver_mobile)) # 发送短消息
                 return express_information
             else:
                 return None
@@ -323,16 +323,16 @@ def getSingelExpressInfo(order_code,get_times):
         if(get_times>10):
             print(response_json)
             get_times=0
-            CreateRecord("订单"+order_code+"物流信息获取失败！","",""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"")
+            CreateRecord("Fail","订单: "+ order_code +" 物流信息获取失败！",""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
             return None
         get_times+=1
         return getSingelExpressInfo(order_code,get_times)
 
 #日志记录
-def CreateRecord(type,detail,time):
+def CreateRecord(type,detail,time,amount):
     conn=DBConnection()
     cur = conn.cursor()
-    record="insert into MD_Record (record_date,record_type,record_detail) values ('"+time+"','"+type+"','"+detail+"')"
+    record="insert into MD_Record (record_date,record_type,record_detail,record_amount) values ('"+time+"','"+type+"','"+detail+"','"+amount+"')"
     cur.execute(record)
     conn.commit()
     conn.close()
