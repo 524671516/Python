@@ -371,7 +371,7 @@ def send_Msg(text, mobile):
     return response_str
 
 if __name__ == '__main__':
-    AppId = "130412"
+    AppId = "130412" 
     AppSecret = "26d2e926f42a4f2181dd7d1b7f7d55c0"
     SessionKey = "8a503b3d9d0d4119be2868cc69a8ef5a"
     API_Url = "http://v2.api.guanyierp.com/rest/erp_open"
