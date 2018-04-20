@@ -288,7 +288,7 @@ def getExpressInfo(start_time,end_time):
     max_record=20
     if(len(suc_list)>max_record):
         for i in range(0,len(suc_list)//max_record):
-            CreateRecord("Download",""+ str(suc_list[i*max_record:i*max_record+max_record-1]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),str(max_record))
+            CreateRecord("Download",""+ str(suc_list[i*max_record:i*max_record+max_record]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),str(max_record))
         CreateRecord("Download",""+ str(suc_list[len(suc_list)//max_record*max_record:len(suc_list)]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),str(len(suc_list)-len(suc_list)//max_record*max_record))
     else:
         CreateRecord("Download",""+ str(suc_list).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'),str(len(suc_list)))
