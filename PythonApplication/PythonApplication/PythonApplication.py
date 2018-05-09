@@ -313,7 +313,8 @@ def getSingelExpressInfo(order_code,get_times):
                 mail_no=response_json["orders"][0]["deliverys"][0]["mail_no"]
                 express_information=express_name+':'+mail_no
                 receiver_mobile = response_json["orders"][0]["receiver_mobile"]
-                send_Msg(mail_no,receiver_mobile)
+                OrderCode = response_json["orders"][0]["platform_code"]
+                #UpdateOrder(OrderCode)
                 return express_information
             else:
                 return None
@@ -337,6 +338,22 @@ def CreateRecord(type,detail,time,amount):
     conn.commit()
     conn.close()
 
+#更新Order_status状态
+def UpdateOrder(orderCode):
+    conn=DBConnection()
+    cur = conn.cursor()
+    singleorder = "select * from MD_Order where order_code = '"+ orderCode +"'"
+    cur.execute(singleorder)
+    orders = cur.fetchall()
+    parentId = str(orders[0][7])
+    orderList = "select * from MD_Order where parentOrder_id = '"+ parentId +"'"
+    cur.execute(orderList)
+    Orders = cur.fetchall()
+    for i in list(range(0,len(Orders))):
+        print(Orders[i][18])
+    conn.commit()
+    conn.close()
+
 def datetime_offset_by_month(datetime1, n = 1):
     one_day = datetime.timedelta(days = 1)
     q,r = divmod(datetime1.month + n, 12)
@@ -351,24 +368,6 @@ def datetime_offset_by_month(datetime1, n = 1):
 def findStr(string, subStr, findCnt):
     listStr = string.split(subStr,findCnt)
     return len(string)-len(listStr[-1])-len(subStr)
-
-def send_Msg(text, mobile):
-    sms_host = "sms.yunpian.com"
-    Apikey = "2100e8a41c376ef6c6a18114853393d7"
-    MsgUrl = "https://sms.yunpian.com/v2/sms/single_send.json"
-    port = "443"
-    MsgText = "【寿全斋】您的验证码是"+"text"
-    Msgmobile = "15921503329"
-    params = ({'apikey': Apikey, 'text': MsgText, 'mobile':Msgmobile})
-    data = parse.urlencode(params).encode('utf-8')
-    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
-    conn = http.client.HTTPSConnection(sms_host, port=port, timeout=30)
-    conn.request("POST", MsgUrl, data, headers)
-    response = conn.getresponse()
-    response_str = response.read()
-    response_str = json.loads(response_str.decode("utf-8"))
-    conn.close()
-    return response_str
 
 if __name__ == '__main__':
     AppId = "130412" 
