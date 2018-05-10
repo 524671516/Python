@@ -8,14 +8,13 @@ from urllib import parse,request
 import hashlib
 import sys
 import urllib
-import http.client
 import string
 
 def DBConnection():
     server = "115.29.197.27"
     user = "sa"
     password = "mail#wwwx"
-    database = "MonthlyDelivery_BAK"
+    database = "MonthlyDelivery"
     conn = pymssql.connect(server, user, password,database)
     return conn
 
@@ -51,54 +50,15 @@ def getOrders(Time):
             if(result!=None):
                 sucorders.append("订单:"+result)
         if(sucorders!=[]):
-            max_record=50
+            max_record=20
             if(len(sucorders)>max_record):
                 for i in range(0,len(sucorders)//max_record):
-                    CreateRecord("成功获取数:50",""+ str(sucorders[i*max_record:i*max_record+49]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
+                    CreateRecord("成功获取数:"+str(max_record),""+ str(sucorders[i*max_record:i*max_record+max_record-1]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
                 CreateRecord("成功获取数:"+ str(len(sucorders)-len(sucorders)//max_record*max_record),""+ str(sucorders[len(sucorders)//max_record*max_record:len(sucorders)]).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
             else:
                 CreateRecord("成功获取数:"+ str(len(sucorders)),""+ str(sucorders).replace('\'','')+ "",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
     else:
         CreateRecord("成功获取数:"+ str(len(orders)),"暂无订单",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
-
-def getHistoryOrders(code):
-    conn = DBConnection()
-    cur = conn.cursor()
-    HistoryOrdersList = "select COUNT(orders.platform_code) from ORDERERP.dbo.orders where orders.platform_code = '"+code+"'"
-    cur.execute(HistoryOrdersList)
-    HistoryOrders = cur.fetchall()
-    orderLen = HistoryOrders[0][0]
-    if(orderLen>1):
-        for i in range(1,orderLen):
-             OrdersList = "select * from ORDERERP.dbo.orders where orders.platform_code ='"+code+"'"
-             cur.execute(OrdersList)
-             Orders = cur.fetchall()
-             platform_code = Orders[0][7]
-             amount = Orders[0][3]
-             pament = Orders[0][4]
-             qty = Orders[0][2]/3
-             create_time =  Orders[0][8]
-             vip_code = Orders[0][18]
-             receiver_tel = Orders[0][21]
-             receiver_address = Orders[0][23]
-             IndexAddress = findStr(receiver_address," ",3)
-             Straddress = receiver_address[IndexAddress+1:]
-             receiver_ares = Orders[0][24]
-             remark = Orders[0][25]
-             discount_fee = Orders[0][30]
-             patment_amount = Orders[0][33]
-             if(receiver_ares == None):
-                 receiver_ares = receiver_address[:IndexAddress]
-                 receiver_ares = receiver_ares.replace(' ','-')
-                 receiver_ares = receiver_ares.replace('null',' ')
-             select_str = "select * from MD_Order where MD_Order.order_code = '"+platform_code+"' and createtime = '"+create_time+"'"
-             cur.execute(select_str)
-             strorder = cur.fetchall()
-             if (strorder == []):
-                 cur.execute("insert into MD_Order " + "(product_id,order_code,qty,amount,payment,discount_fee,payment_amount,receiver_date,receiver_area,"+
-                "receiver_address,receiver_tel,delivery_state,upload_status,vip_code,receiver_times,remark) values(%d,%s,%d,%d,%d,%d,%d,%s,%s,%s,%s,%d,%d,%s,%d,%s)",(product_id,platform_code,qty,amount,pament,discount_fee,patment_amount,create_time,receiver_ares,Straddress,receiver_tel,0,1,vip_code,1,remark))                    
-    conn.commit()
-    conn.close()
 
 #新建order进数据库
 def insertSingleOrder(order,product_id,cycle_index):
@@ -111,28 +71,26 @@ def insertSingleOrder(order,product_id,cycle_index):
     pament = Orders[0][4]
     qty = Orders[0][2]/3
     platform_code = Orders[0][7]
-    #getHistoryOrders("127241773940265853")
     create_time =  Orders[0][8]
     vip_code = Orders[0][18]
+    receiver_name=Orders[0][19]
     receiver_tel = Orders[0][21]
     receiver_address = Orders[0][23]
-    IndexAddress = findStr(receiver_address," ",3)
-    Straddress = receiver_address[IndexAddress+1:]
+    Straddress = receiver_address[receiver_address.rfind(" ")+1:]
     receiver_ares = Orders[0][24]
-    remark = Orders[0][25]
     if(receiver_ares == None):
-        receiver_ares = receiver_address[:IndexAddress]
-        receiver_ares = receiver_ares.replace(' ','-')
-        receiver_ares = receiver_ares.replace('null',' ')
+        receiver_ares = receiver_address[:receiver_address.rfind(" ")]
+        receiver_ares = receiver_ares.replace(" ","-").replace("null","")
     discount_fee = Orders[0][30]
     patment_amount = Orders[0][33]
+    #delivery_state = Orders[0][34]
     select_str = "select * from MD_Order where  MD_Order.order_code = '"+platform_code+"'"
     cur.execute(select_str)
     strorder = cur.fetchall()
     if (strorder == []):
         cur.execute("insert into MD_Order " + "(product_id,order_code,qty,amount,payment,discount_fee,payment_amount,receiver_date,receiver_area,"+
-                "receiver_address,receiver_tel,delivery_state,upload_status,vip_code,receiver_times,remark) values(%d,%s,%d,%d,%d,%d,%d,%s,%s,%s,%s,%d,%d,%s,%d,%s)",(product_id,platform_code,qty,amount,pament,discount_fee,patment_amount,create_time,receiver_ares,Straddress,receiver_tel,0,1,vip_code,1,remark))
-        if(qty<5):
+                "receiver_address,receiver_tel,delivery_state,upload_status,vip_code,receiver_times,receiver_name) values(%d,%s,%d,%d,%d,%d,%d,%s,%s,%s,%s,%d,%d,%s,%d,%s)",(product_id,platform_code,qty,amount,pament,discount_fee,patment_amount,create_time,receiver_ares,Straddress,receiver_tel,0,1,vip_code,1,receiver_name))
+        if(qty<6):
             cur.execute("select @@IDENTITY")
             row = cur.fetchall()
             insert_id = row[0]
@@ -141,7 +99,7 @@ def insertSingleOrder(order,product_id,cycle_index):
             orders = cur.fetchall()
             plantformId = orders[0][1]
             order_status= orders[0][3]
-            Remark = orders[0][5]
+            remark = orders[0][5]
             parentOrderId = orders[0][0]
             vipCode = orders[0][11]
             Qty = orders[0][14]
@@ -160,7 +118,7 @@ def insertSingleOrder(order,product_id,cycle_index):
                 orders_d = cur.fetchall()
                 receiver_d = datetime_offset_by_month(orders_d[0][2],1)
                 cur.execute("insert into MD_Order " + "(product_id,order_code,qty,receiver_date,parentOrder_id,receiver_times,vip_code,"+
-                           "receiver_area,receiver_address,receiver_tel,upload_status,remark) values(%d,%s,%d,%s,%d,%d,%s,%s,%s,%s,%d,%s)",(product_id,"MD"+ plantformId + str(-i),Qty,receiver_d,parentOrderId,i+1,vipCode,receiverArea,receiverAddress,receiverTell,0,Remark)) 
+                           "receiver_area,receiver_address,receiver_tel,upload_status,receiver_name) values(%d,%s,%d,%s,%d,%d,%s,%s,%s,%s,%d,%s)",(product_id,"MD"+ plantformId + str(-i),Qty,receiver_d,parentOrderId,i+1,vipCode,receiverArea,receiverAddress,receiverTell,0,receiver_name)) 
     else:
         CreateRecord("error","订单["+ platform_code +"]已存在！",datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
         return None
@@ -178,19 +136,19 @@ def getDBData():
     CreateData_List=[]
     for i in list(range(0,len(orderList))):
         plantformId = orderList[i][1]
-        quantity = orderList[i][14]
-        receiverDate =orderList[i][2]
-        order_status=orderList[i][3]
-        remark=orderList[i][5]
+        quantity = orderList[i][2]
+        receiverDate =orderList[i][7]
+        order_status=orderList[i][18]
+        remark=orderList[i][13]
         if(remark==None):
             remark=""
-        parentOrderId=orderList[i][7]
-        receiver_mobile=orderList[i][9]
-        productId=orderList[i][10]
-        vipCode=orderList[i][11]
-        receiver_address=orderList[i][6]
-        receiver_area=orderList[i][12]
-        receiver_name=orderList[i][20]
+        parentOrderId=orderList[i][15]
+        receiver_mobile=orderList[i][10]
+        productId=orderList[i][21]
+        vipCode=orderList[i][14]
+        receiver_address=orderList[i][9]
+        receiver_area=orderList[i][8]
+        receiver_name=orderList[i][11]
         receiver_province=receiver_area[0:receiver_area.index("-")]
         receiver_area=receiver_area[receiver_area.index("-")+1:len(receiver_area)]
         receiver_city=receiver_area[0:receiver_area.index("-")]
@@ -209,7 +167,7 @@ def getDBData():
             for j in list(range(0,len(ProductList))):
                 product_data="[{\"item_code\":\""+ProductList[j][1]+"\",\"qty\":%d,\"price\":0,\"note\":null,\"refund\":0,\"oid\":null,\"sku_code\":null}]"%quantity
                 Product_Data.append(product_data)
-                create_data = "{\"appkey\":\"" + AppId + "\",\"method\":\"gy.erp.trade.get\",\"sessionkey\":\"" + SessionKey + "\",\"order_type_code\":\"其它订单\",\"platform_code\":\""\
+                create_data = "{\"appkey\":\"" + AppId + "\",\"method\":\"gy.erp.trade.add\",\"sessionkey\":\"" + SessionKey + "\",\"order_type_code\":\"其它订单\",\"platform_code\":\""\
                 + plantformId + "\",\"shop_code\":\"月月送\",\"vip_code\":\"" + vipCode + "\",\"buyer_memo\":\""+str(remark)+"\",\"warehouse_code\":\"107\",\"express_code\":\"STO\",\"receiver_name\":\""+receiver_name+"\",\"receiver_province\":\""\
                 +receiver_province+"\",\"receiver_city\":\""+receiver_city+"\",\"receiver_district\":\""+receiver_district+"\",\"receiver_mobile\":\""+receiver_mobile+"\",\"receiver_zip\":\"200000\",\"receiver_address\":\""\
                 +receiver_address+"\",\"deal_datetime\":\""+str(receiverDate)+"\",\"details\":"+str(product_data)+",\"payments\":" + str(Payment_Data) +"}"
@@ -249,7 +207,6 @@ def createOrder(orderList):
 def createSingleOrder(order,try_times):
     API_Url = "http://v2.api.guanyierp.com/rest/erp_open"
     info = order[:-1] + ",\"sign\":\"" + sign(order, AppSecret) + "\"}"
-    print(info)
     headers = {"Content-type": "application/json"} 
     content = info.encode('utf-8')
     request = urllib.request.Request(url=API_Url, method='POST', data=content, headers=headers)
@@ -314,6 +271,7 @@ def getSingelExpressInfo(order_code,get_times):
                 express_information=express_name+':'+mail_no
                 receiver_mobile = response_json["orders"][0]["receiver_mobile"]
                 OrderCode = response_json["orders"][0]["platform_code"]
+                send_Msg(mail_no,receiver_mobile)
                 #UpdateOrder(OrderCode)
                 return express_information
             else:
@@ -322,7 +280,6 @@ def getSingelExpressInfo(order_code,get_times):
         #延迟4秒，出错尝试5次
         time.sleep(5)
         if(get_times>10):
-            print(response_json)
             get_times=0
             CreateRecord("Fail","订单: "+ order_code +" 物流信息获取失败！",""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
             return None
@@ -338,22 +295,6 @@ def CreateRecord(type,detail,time,amount):
     conn.commit()
     conn.close()
 
-#更新Order_status状态
-def UpdateOrder(orderCode):
-    conn=DBConnection()
-    cur = conn.cursor()
-    singleorder = "select * from MD_Order where order_code = '"+ orderCode +"'"
-    cur.execute(singleorder)
-    orders = cur.fetchall()
-    parentId = str(orders[0][7])
-    orderList = "select * from MD_Order where parentOrder_id = '"+ parentId +"'"
-    cur.execute(orderList)
-    Orders = cur.fetchall()
-    for i in list(range(0,len(Orders))):
-        print(Orders[i][18])
-    conn.commit()
-    conn.close()
-
 def datetime_offset_by_month(datetime1, n = 1):
     one_day = datetime.timedelta(days = 1)
     q,r = divmod(datetime1.month + n, 12)
@@ -365,12 +306,26 @@ def datetime_offset_by_month(datetime1, n = 1):
         return datetime2
     return datetime2.replace(day = datetime1.day)
 
-def findStr(string, subStr, findCnt):
-    listStr = string.split(subStr,findCnt)
-    return len(string)-len(listStr[-1])-len(subStr)
+def send_Msg(text, mobile):
+    sms_host = "sms.yunpian.com"
+    Apikey = "2100e8a41c376ef6c6a18114853393d7"
+    MsgUrl = "https://sms.yunpian.com/v2/sms/single_send.json"
+    port = "443"
+    MsgText = "【寿全斋】您的验证码是"+"text"
+    Msgmobile = "15921503329"
+    params = ({'apikey': Apikey, 'text': MsgText, 'mobile':Msgmobile})
+    data = parse.urlencode(params).encode('utf-8')
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn = http.client.HTTPSConnection(sms_host, port=port, timeout=30)
+    conn.request("POST", MsgUrl, data, headers)
+    response = conn.getresponse()
+    response_str = response.read()
+    response_str = json.loads(response_str.decode("utf-8"))
+    conn.close()
+    return response_str
 
 if __name__ == '__main__':
-    AppId = "130412" 
+    AppId = "130412"
     AppSecret = "26d2e926f42a4f2181dd7d1b7f7d55c0"
     SessionKey = "8a503b3d9d0d4119be2868cc69a8ef5a"
     API_Url = "http://v2.api.guanyierp.com/rest/erp_open"
@@ -378,5 +333,5 @@ if __name__ == '__main__':
     Time =  y_Time.strftime("%Y-%m-%d 00:00:00")
     getExpressInfo(Time,datetime.date.today().strftime("%Y-%m-%d 00:00:00"))
     #getOrders(Time)
-    #createOrder(getDBData())
+    createOrder(getDBData())
     #input("Press Enter")
