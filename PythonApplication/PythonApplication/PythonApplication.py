@@ -15,7 +15,7 @@ def DBConnection():
     server = "115.29.197.27"
     user = "sa"
     password = "mail#wwwx"
-    database = "MonthlyDelivery"
+    database = "MonthlyDelivery_BAK"
     conn = pymssql.connect(server, user, password,database)
     return conn
 
@@ -272,7 +272,7 @@ def getSingelExpressInfo(order_code,get_times):
                 express_information=express_name+':'+mail_no
                 receiver_mobile = response_json["orders"][0]["receiver_mobile"]
                 OrderCode = response_json["orders"][0]["platform_code"]
-                #send_Msg(mail_no,receiver_mobile)
+                send_Msg(express_name,mail_no,receiver_mobile)
                 #UpdateOrder(OrderCode)
                 return express_information
             else:
@@ -307,14 +307,13 @@ def datetime_offset_by_month(datetime1, n = 1):
         return datetime2
     return datetime2.replace(day = datetime1.day)
 
-def send_Msg(text, mobile):
+def send_Msg(exp_name,exp_number,mobile):
     sms_host = "sms.yunpian.com"
     Apikey = "2100e8a41c376ef6c6a18114853393d7"
     MsgUrl = "https://sms.yunpian.com/v2/sms/single_send.json"
     port = "443"
-    MsgText = "【寿全斋】您专属的定期送寿全斋红糖姜茶发货啦~快递单号："+ str(text)
-    Msgmobile = "15921503329"
-    params = ({'apikey': Apikey, 'text': MsgText, 'mobile':Msgmobile})
+    MsgText = "【寿全斋】您专属的定期送寿全斋红糖姜茶发货啦~快递单号："+str(exp_name)+", "+str(exp_number)
+    params = ({'apikey': Apikey, 'text': MsgText, 'mobile':mobile})
     data = parse.urlencode(params).encode('utf-8')
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn = http.client.HTTPSConnection(sms_host, port=port, timeout=30)
@@ -323,7 +322,12 @@ def send_Msg(text, mobile):
     response_str = response.read()
     response_str = json.loads(response_str.decode("utf-8"))
     conn.close()
-    print(response_str)
+    if(response_str['code'] == 0):
+        CreateRecord("SendSuccess","手机号: "+ str(mobile) +" 短信发送成功！物流信息: "+ str(exp_name) +
+                     str(exp_number),""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
+    else:
+        CreateRecord("SendError","手机号: "+ str(mobile) +" 短信发送失败！错误代码: "
+        + str(response_str['code']) ,""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
     return response_str
 
 if __name__ == '__main__':
@@ -334,7 +338,7 @@ if __name__ == '__main__':
     y_Time = datetime.date.today() + datetime.timedelta(days=-1)
     Time =  y_Time.strftime("%Y-%m-%d 00:00:00")
     getExpressInfo(Time,datetime.date.today().strftime("%Y-%m-%d 00:00:00"))
-    send_Msg(111,15921503329)
+    #send_Msg("顺丰",1111,15921503329)
     #getOrders(Time)
     #createOrder(getDBData())
     #input("Press Enter")
