@@ -272,8 +272,7 @@ def getSingelExpressInfo(order_code,get_times):
                 express_information=express_name+':'+mail_no
                 receiver_mobile = response_json["orders"][0]["receiver_mobile"]
                 OrderCode = response_json["orders"][0]["platform_code"]
-                send_Msg(express_name,mail_no,receiver_mobile)
-                #UpdateOrder(OrderCode)
+                send_Msg(express_name,mail_no,receiver_mobile,OrderCode)
                 return express_information
             else:
                 return None
@@ -307,7 +306,7 @@ def datetime_offset_by_month(datetime1, n = 1):
         return datetime2
     return datetime2.replace(day = datetime1.day)
 
-def send_Msg(exp_name,exp_number,mobile):
+def send_Msg(exp_name,exp_number,mobile,ord_code):
     sms_host = "sms.yunpian.com"
     Apikey = "2100e8a41c376ef6c6a18114853393d7"
     MsgUrl = "https://sms.yunpian.com/v2/sms/single_send.json"
@@ -323,8 +322,7 @@ def send_Msg(exp_name,exp_number,mobile):
     response_str = json.loads(response_str.decode("utf-8"))
     conn.close()
     if(response_str['code'] == 0):
-        CreateRecord("SendSuccess","手机号: "+ str(mobile) +" 短信发送成功！物流信息: "+ str(exp_name) +
-                     str(exp_number),""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
+        CreateRecord("SendSuccess","手机号: "+ str(mobile) +" 短信发送成功！订单号: "+ str(ord_code),""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
     else:
         CreateRecord("SendError","手机号: "+ str(mobile) +" 短信发送失败！错误代码: "
         + str(response_str['code']) ,""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
