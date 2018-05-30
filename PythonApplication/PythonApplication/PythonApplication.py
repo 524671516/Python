@@ -15,7 +15,7 @@ def DBConnection():
     server = "115.29.197.27"
     user = "sa"
     password = "mail#wwwx"
-    database = "MonthlyDelivery_BAK"
+    database = "MonthlyDelivery"
     conn = pymssql.connect(server, user, password,database)
     return conn
 
@@ -328,6 +328,7 @@ def send_Msg(exp_name,exp_number,mobile,ord_code):
         + str(response_str['code']) ,""+datetime.datetime.now().strftime('%Y.%m.%d %H:%M:%S')+"","1")
     return response_str
 
+
 if __name__ == '__main__':
     AppId = "130412"
     AppSecret = "26d2e926f42a4f2181dd7d1b7f7d55c0"
@@ -336,7 +337,6 @@ if __name__ == '__main__':
     y_Time = datetime.date.today() + datetime.timedelta(days=-1)
     Time =  y_Time.strftime("%Y-%m-%d 00:00:00")
     getExpressInfo(Time,datetime.date.today().strftime("%Y-%m-%d 00:00:00"))
-    #send_Msg("顺丰",1111,15921503329)
     #getOrders(Time)
-    #createOrder(getDBData())
+    createOrder(getDBData())
     #input("Press Enter")
