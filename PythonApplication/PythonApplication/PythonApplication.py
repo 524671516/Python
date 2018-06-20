@@ -175,7 +175,7 @@ def getDBData():
         #判断发货日期
         receiverDate=receiverDate.strftime("%Y-%m-%d")
         if(receiverDate==time.strftime("%Y-%m-%d", time.localtime())):
-            CreateData_List.append(create_data)
+           CreateData_List.append(create_data)
         #CreateData_List.append(create_data)#测试
     conn.commit()
     conn.close()
@@ -272,7 +272,7 @@ def getSingelExpressInfo(order_code,get_times):
                 express_information=express_name+':'+mail_no
                 receiver_mobile = response_json["orders"][0]["receiver_mobile"]
                 OrderCode = response_json["orders"][0]["platform_code"]
-                send_Msg(express_name,mail_no,receiver_mobile,OrderCode)
+                #send_Msg(express_name,mail_no,receiver_mobile,OrderCode)
                 return express_information
             else:
                 return None
