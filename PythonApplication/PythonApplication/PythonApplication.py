@@ -176,7 +176,10 @@ def getDBData():
         receiverDate=receiverDate.strftime("%Y-%m-%d")
         if(receiverDate==time.strftime("%Y-%m-%d", time.localtime())):
            CreateData_List.append(create_data)
-        #CreateData_List.append(create_data)#测试
+        #aaa = datetime.date.today() + datetime.timedelta(days=-5)
+        #if(receiverDate==aaa.strftime("%Y-%m-%d")):
+        #   print(receiverDate)
+        #   CreateData_List.append(create_data)   
     conn.commit()
     conn.close()
     return CreateData_List
